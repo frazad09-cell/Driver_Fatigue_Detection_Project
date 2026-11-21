@@ -1,30 +1,89 @@
-# Driver Fatigue Detection Project
+# Driver Fatigue Detection
 
-## What's included
+An educational computer vision project that classifies eye and mouth states from facial images, compares two image classifiers, and demonstrates how predictions can be summarized across a time-ordered session.
 
-- `Driver_Fatigue_Detection.ipynb`: end-to-end notebook for four-class image classification, custom CNN vs. frozen MobileNetV2, independent eye/mouth binary models, confusion matrices and precision/recall, three-stage fusion, session progression, and brightness stress checks.
-- `requirements.txt`: Python dependencies.
+> **Prototype only:** This project is for learning and experimentation. It has not been validated for driving or medical use and must not be used to decide whether anyone is safe to drive.
 
-## Dataset found in the supplied ZIP
+## Project at a glance
 
-The supplied archive contains 2,900 JPG images under `train/Closed`, `train/Open`, `train/no_yawn`, and `train/yawn` (725–726 images per class). It does not contain separate validation/test directories, a dataset citation, license, or subject/session IDs. The notebook creates a reproducible stratified 70/15/15 image-level split. If person/video IDs can be recovered, replace it with group-based splitting to reduce leakage. Confirm the source and license before redistribution or publication.
+| | |
+|---|---|
+| **Task** | Four-class facial image classification |
+| **Labels** | `Closed`, `Open`, `no_yawn`, `yawn` |
+| **Models** | Custom CNN and frozen ImageNet MobileNetV2 |
+| **Framework** | TensorFlow / Keras |
+| **Notebook** | [Open the end-to-end notebook](Driver_Fatigue_Detection.ipynb) |
 
-## Run
+The notebook also derives separate eye-state and mouth-state tasks, evaluates held-out images, maps image predictions to three illustrative fatigue stages, and includes a simple brightness stress check.
 
-1. Install Python 3.10+ and the requirements. A GPU is helpful but not required.
-2. Put the original ZIP next to the notebook (the notebook checks the uploaded archive names) or set `ZIP_PATH` to the correct file.
-3. Open the notebook and run all cells. First MobileNetV2 run may need internet access to fetch ImageNet weights.
-4. Metrics, saved models, model comparison, and progression CSV are created in `artifacts/`.
-5. For meaningful progression, put actual time-ordered frames in `session_frames/`; adjust `FRAMES_PER_MINUTE` to match capture rate. Without these, the notebook uses a shuffled synthetic example and labels it as such.
+## Workflow
 
-## Labels and fusion
+```mermaid
+flowchart LR
+    A["Class folders"] --> B["Stratified train / validation / test split"]
+    B --> C["Train CNN and MobileNetV2"]
+    C --> D["Evaluate per class"]
+    D --> E["Map predictions to illustrative stages"]
+    E --> F["Summarize chronological session frames"]
+```
 
-- `Closed` / `Open`: eye state.
-- `yawn` / `no_yawn`: mouth state.
-- Rule-based mapping: `Open` or `no_yawn` → Alert (0); `yawn` → Mild Fatigue (1); `Closed` → Severe Fatigue (2).
+## Repository contents
 
-The supplied ZIP combines eye and mouth categories as four labels. The notebook derives two separate binary tasks from those labels and also trains four-class models.
+| File | Purpose |
+|---|---|
+| [`Driver_Fatigue_Detection.ipynb`](Driver_Fatigue_Detection.ipynb) | Data inspection, preprocessing, model training, evaluation, progression demo, and stress check |
+| [`requirements.txt`](requirements.txt) | Python package requirements |
 
-## Safety and evaluation
+Training outputs are written to an `artifacts/` folder when the notebook is run. They are generated locally and are not included in this repository.
 
-This is an educational prototype, not a validated driver-monitoring or medical/safety system. Image-level held-out metrics do not establish performance on unseen drivers, cameras, or road conditions. Do not use the prototype to decide whether a person is safe to drive.
+## Dataset
+
+The supplied archive used for this project contains **2,900 JPG images** in four class folders under `train/`:
+
+| Folder | Meaning |
+|---|---|
+| `Closed` | Eyes closed |
+| `Open` | Eyes open |
+| `no_yawn` | No yawn |
+| `yawn` | Yawn |
+
+The archive does not include separate validation or test folders, a dataset citation or license, or subject/session identifiers. The notebook therefore creates a reproducible, stratified **70% / 15% / 15% image-level split**. Images of the same person or recording could appear across splits; use a person- or session-level split if those identifiers become available. Confirm the dataset source and reuse terms before redistribution or publication.
+
+The dataset archive is not stored in this repository. Place the supplied ZIP beside the notebook, or change `ZIP_PATH` in the setup cell. The notebook checks for `archive (2) (1)(1).zip` and `archive (2) (1).zip` by default.
+
+## Run the notebook
+
+1. Use Python 3.10 or newer and install the dependencies:
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+2. Start Jupyter:
+   ```bash
+   jupyter notebook
+   ```
+3. Open `Driver_Fatigue_Detection.ipynb` and run the cells in order.
+4. On the first MobileNetV2 run, Keras may download pretrained ImageNet weights. A GPU can reduce training time, but is not required.
+
+## What the notebook produces
+
+- Training and validation histories for the custom CNN and MobileNetV2.
+- Test-set accuracy, per-class precision/recall/F1, and confusion matrices.
+- A model comparison table saved as `artifacts/model_comparison.csv`.
+- Separate binary eye-state and mouth-state classifiers.
+- A rule-based mapping to **Alert**, **Mild Fatigue**, and **Severe Fatigue** demonstration stages.
+- A progression table saved as `artifacts/fatigue_progression.csv`.
+- A basic darker/brighter image stress check.
+
+For a meaningful progression demonstration, add real, time-ordered images to `session_frames/` and set `FRAMES_PER_MINUTE` to match the capture rate. If that folder is absent, the notebook uses shuffled test images to illustrate the code path; it labels that example as synthetic, and it is not a real driving-session result.
+
+## Interpretation and limitations
+
+- Held-out image metrics do not show how the model performs on unseen drivers, cameras, vehicles, lighting, or road conditions.
+- The image-level split may overstate generalization when multiple images come from the same person or recording.
+- Brightness changes are only a small stress check; they do not represent night driving, glare, sunglasses, occlusion, or varied camera placement.
+- The three-stage mapping is a simple demonstration rule, not a clinically or operationally validated fatigue measure.
+- Do not use these predictions as a real-time warning system or as a basis for driving decisions.
+
+## License and dataset attribution
+
+No project license or dataset citation was provided in the supplied materials. Check the dataset's original source and license before sharing the images, publishing results, or adding a license to this repository.
